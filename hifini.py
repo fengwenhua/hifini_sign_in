@@ -51,10 +51,10 @@ def start(cookie):
         # print(rsp_json['code'])
         # print(rsp_json['message'])
         print("签到结果: ",msg)
-        send("签到结果", msg)
+        send("hifini 签到结果", msg)
     except Exception as e:
         print("签到失败，失败原因:"+str(e))
-        send("签到结果", str(e))
+        send("hifini 签到结果", str(e))
 
 
 if __name__ == "__main__":
