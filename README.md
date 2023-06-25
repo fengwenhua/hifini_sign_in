@@ -6,6 +6,12 @@ hifini - 音乐磁场 青龙自动签到脚本
 ql repo https://github.com/fengwenhua/hifini_sign_in.git "hifini.py" "" "sendNotify"
 ```
 
+国内机器如下：
+
+```shell
+ql repo https://ghproxy.com/https://github.com/fengwenhua/hifini_sign_in.git "hifini.py" "" "sendNotify"
+```
+
 青龙面板新增环境变量: `HIFINI_COOKIE`
 
 值应该类似如下:
