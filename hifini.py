@@ -40,7 +40,7 @@ def start(cookie):
             msg = '已经签到过了，不再重复签到!'
         elif "成功" in rsp_text:
             msg = "签到成功!"
-        elif "503 Service Temporarily" in rsp_text:
+        elif "503 Service Temporarily" in rsp_text or "502 Bad Gateway" in rsp_text:
             msg = "服务器异常！"
         elif "请登录后再签到!" in rsp_text:
             msg = "Cookie没有正确设置！"
