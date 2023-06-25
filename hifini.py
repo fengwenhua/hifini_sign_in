@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-cron: 0 0 0 * * *
+cron: 1 0 0 * * *
 new Env('HiFiNi');
 """
 
