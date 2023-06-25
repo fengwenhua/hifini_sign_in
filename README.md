@@ -14,6 +14,9 @@ ql repo https://ghproxy.com/https://github.com/fengwenhua/hifini_sign_in.git "hi
 
 青龙面板新增环境变量: `HIFINI_COOKIE`
 
+![image](https://github.com/fengwenhua/hifini_sign_in/assets/26518808/d5c1563d-7812-4c20-ba77-829c560af136)
+
+
 值应该类似如下:
 
 ```
