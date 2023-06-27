@@ -54,6 +54,7 @@ def start(cookie):
                 msg += "服务器异常！\n"
             elif "请登录后再签到!" in rsp_text:
                 msg += "Cookie没有正确设置！\n"
+                success = True
             else:
                 msg += "未知异常!\n"
                 msg += rsp_text + '\n'
