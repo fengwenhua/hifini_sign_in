@@ -15,7 +15,7 @@ requests.packages.urllib3.disable_warnings()
 
 
 def start(cookie):
-    max_retries = 10
+    max_retries = 20
     retries = 0
     msg = ""
     while retries < max_retries:
@@ -41,7 +41,7 @@ def start(cookie):
             rsp = requests.post(url=sign_in_url, headers=headers,
                                 timeout=15, verify=False)
             rsp_text = rsp.text.strip()
-            print(rsp_text)
+            # print(rsp_text)
             success = False
             if "今天已经签过啦！" in rsp_text:
                 msg += '已经签到过了，不再重复签到!\n'
@@ -72,8 +72,8 @@ def start(cookie):
                 break
             else:
                 retries += 1
-                print("等待60秒后进行重试...")
-                time.sleep(60)
+                print("等待20秒后进行重试...")
+                time.sleep(20)
         except Exception as e:
             print("签到失败，失败原因:"+str(e))
             send("hifini 签到结果", str(e))
@@ -82,8 +82,8 @@ def start(cookie):
                 print("达到最大重试次数，签到失败。")
                 break
             else:
-                print("等待60秒后进行重试...")
-                time.sleep(60)
+                print("等待20秒后进行重试...")
+                time.sleep(20)
 
 if __name__ == "__main__":
     cookie = os.getenv("HIFINI_COOKIE")
