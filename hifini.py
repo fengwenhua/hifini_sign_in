@@ -16,7 +16,7 @@ requests.packages.urllib3.disable_warnings()
 
 
 def start(cookie):
-    max_retries = 20
+    max_retries = 5
     retries = 0
     msg = ""
     while retries < max_retries:
