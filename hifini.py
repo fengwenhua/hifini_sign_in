@@ -5,7 +5,8 @@ new Env('HiFiNi');
 """
 
 import json
-from sendNotify import send
+# from sendNotify import send  # 本地调试用
+from notify import send  # 导入青龙后自动有这个文件
 from bs4 import BeautifulSoup
 import requests
 import re
