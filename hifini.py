@@ -6,6 +6,7 @@ new Env('HiFiNi');
 
 import json
 from sendNotify import send
+from bs4 import BeautifulSoup
 import requests
 import re
 import os
@@ -25,43 +26,53 @@ def start(cookie):
             headers = {
                 'Cookie': cookie,
                 'authority': 'www.hifini.com',
-                'accept': 'text/plain, */*; q=0.01',
-                'accept-language': 'zh-CN,zh;q=0.9',
-                'origin': 'https://www.hifini.com',
+                'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+                'accept-encoding': 'gzip, deflate, br',
+                'accept-language': 'zh-CN,zh;q=0.9,und;q=0.8',
                 'referer': 'https://www.hifini.com/',
-                'sec-ch-ua': '"Not.A/Brand";v="8", "Chromium";v="114", "Google Chrome";v="114"',
+                'sec-ch-ua': '"Chromium";v="122", "Not(A:Brand";v="24", "Google Chrome";v="122"',
                 'sec-ch-ua-mobile': '?0',
-                'sec-ch-ua-platform': '"macOS"',
-                'sec-fetch-dest': 'empty',
-                'sec-fetch-mode': 'cors',
+                'sec-ch-ua-platform': '"Windows"',
+                'sec-fetch-dest': 'document',
+                'sec-fetch-mode': 'navigate',
                 'sec-fetch-site': 'same-origin',
-                'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36',
-                'x-requested-with': 'XMLHttpRequest',
+                'sec-fetch-user': '?1',
+                'sec-gpc': '1',
+                'upgrade-insecure-requests': '1',
+                'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
             }
-            rsp = requests.post(url=sign_in_url, headers=headers,
-                                timeout=15, verify=False)
-            rsp_text = rsp.text.strip()
-            # print(rsp_text)
+            
+            rsp = requests.get(url=sign_in_url, headers=headers, timeout=15, verify=False)
+            rsp_text = rsp.text
             success = False
-            if "今天已经签过啦！" in rsp_text:
-                msg += '已经签到过了，不再重复签到!\n'
+
+            # 判断签到结果
+            if "请登录后查看" in rsp_text:
+                msg += "Cookie没有正确设置！\n"
                 success = True
-            elif "成功" in rsp_text:
-                rsp_json = json.loads(rsp_text)
-                msg += rsp_json['message']
+            elif "今日排名" in rsp_text:
+                # 匹配签到结果
+                soup = BeautifulSoup(rsp_text, 'html.parser')
+                table = soup.find('table')  # 找到第一个表格
+                rows = table.find_all('tr')  # 获取所有行
+                last_row = rows[-1]  # 获取最后一行
+
+                # 提取最后一行的所有单元格内容
+                cells = last_row.find_all('td')
+                last_row_content = [cell.text for cell in cells]
+
+                msg += "账户 {} hifini签到成功！\n今日签到排名{}名，本次签到获得{}，现有{}，已连续签到{}。".format(
+                    last_row_content[1], last_row_content[0], last_row_content[3],
+                    last_row_content[2], last_row_content[-1]
+                )
                 success = True
             elif "503 Service Temporarily" in rsp_text or "502 Bad Gateway" in rsp_text:
                 msg += "服务器异常！\n"
-            elif "请登录后再签到!" in rsp_text:
-                msg += "Cookie没有正确设置！\n"
-                success = True
             else:
                 msg += "未知异常!\n"
                 msg += rsp_text + '\n'
 
-            # rsp_json = json.loads(rsp_text)
-            # print(rsp_json['code'])
-            # print(rsp_json['message'])
+            # 发送消息
             if success:
                 print("签到结果: ",msg)
                 send("hifini 签到结果", msg)
