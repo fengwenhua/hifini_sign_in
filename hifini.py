@@ -14,7 +14,41 @@ import time
 requests.packages.urllib3.disable_warnings()
 
 
-def start(cookie):
+def get_sign_value(cookies):
+    headers = {
+        'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+        'accept-language': 'zh-CN,zh;q=0.9',
+        'cookie': cookies,
+        'priority': 'u=0, i',
+        'referer': 'https://www.hifini.com/sg_sign.htm',
+        'sec-ch-ua': '"Chromium";v="124", "Google Chrome";v="124", "Not-A.Brand";v="99"',
+        'sec-ch-ua-mobile': '?0',
+        'sec-ch-ua-platform': '"Windows"',
+        'sec-fetch-dest': 'document',
+        'sec-fetch-mode': 'navigate',
+        'sec-fetch-site': 'same-origin',
+        'sec-fetch-user': '?1',
+        'upgrade-insecure-requests': '1',
+        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+    }
+
+    response = requests.get(
+        'https://www.hifini.com/sg_sign.htm', headers=headers)
+    # print(response.text)
+
+    pattern = r'var sign = "([\da-f]+)"'
+    matches = re.findall(pattern, response.text)
+
+    if matches:
+        sign_value = matches[0]
+        print(sign_value)
+        return sign_value
+    else:
+        print("No sign value found.")
+        return None
+
+
+def start(sign, cookie):
     max_retries = 20
     retries = 0
     msg = ""
@@ -38,10 +72,14 @@ def start(cookie):
                 'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36',
                 'x-requested-with': 'XMLHttpRequest',
             }
-            rsp = requests.post(url=sign_in_url, headers=headers,
+
+            data = {
+                'sign': sign,
+            }
+            rsp = requests.post(url=sign_in_url, headers=headers, data=data,
                                 timeout=15, verify=False)
             rsp_text = rsp.text.strip()
-            # print(rsp_text)
+            print(rsp_text)
             success = False
             if "今天已经签过啦！" in rsp_text:
                 msg += '已经签到过了，不再重复签到!\n'
@@ -55,6 +93,10 @@ def start(cookie):
             elif "请登录后再签到!" in rsp_text:
                 msg += "Cookie没有正确设置！\n"
                 success = True
+            elif "操作存在风险，请稍后重试" in rsp_text:
+                msg += "没有设置sign导致的!\n"
+                success = False
+                send("hifini 签到失败：", msg)
             else:
                 msg += "未知异常!\n"
                 msg += rsp_text + '\n'
@@ -63,7 +105,7 @@ def start(cookie):
             # print(rsp_json['code'])
             # print(rsp_json['message'])
             if success:
-                print("签到结果: ",msg)
+                print("签到结果: ", msg)
                 send("hifini 签到结果", msg)
                 break  # 成功执行签到，跳出循环
             elif retries >= max_retries:
@@ -85,6 +127,11 @@ def start(cookie):
                 print("等待20秒后进行重试...")
                 time.sleep(20)
 
+
 if __name__ == "__main__":
     cookie = os.getenv("HIFINI_COOKIE")
-    start(cookie)
+    sign = get_sign_value(cookie)
+    if sign:
+        start(sign, cookie)
+    else:
+        send("hifini 签到失败：没有获取到签名，请联系开发人员")
