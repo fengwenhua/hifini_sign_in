@@ -44,6 +44,10 @@ def get_sign_value(cookies):
         print(sign_value)
         return sign_value
     else:
+        if '登录后查看' in response.text:
+            print("[-] Cookie失效")
+            send("hifini 签到异常", "Cookie失效")
+            return None
         print("No sign value found.")
         return None
 
@@ -134,4 +138,4 @@ if __name__ == "__main__":
     if sign:
         start(sign, cookie)
     else:
-        send("hifini 签到失败：没有获取到签名，请联系开发人员")
+        send("hifini 签到异常", "hifini 签到失败：没有获取到签名，请联系开发人员")
