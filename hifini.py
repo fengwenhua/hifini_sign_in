@@ -20,7 +20,7 @@ def get_sign_value(cookies):
         'accept-language': 'zh-CN,zh;q=0.9',
         'cookie': cookies,
         'priority': 'u=0, i',
-        'referer': 'https://www.hifini.com/sg_sign.htm',
+        'referer': 'https://www.hifiti.com/sg_sign.htm',
         'sec-ch-ua': '"Chromium";v="124", "Google Chrome";v="124", "Not-A.Brand";v="99"',
         'sec-ch-ua-mobile': '?0',
         'sec-ch-ua-platform': '"Windows"',
@@ -33,7 +33,7 @@ def get_sign_value(cookies):
     }
 
     response = requests.get(
-        'https://www.hifini.com/sg_sign.htm', headers=headers)
+        'https://www.hifiti.com/sg_sign.htm', headers=headers)
     # print(response.text)
 
     pattern = r'var sign = "([\da-f]+)"'
@@ -59,14 +59,14 @@ def start(sign, cookie):
     while retries < max_retries:
         try:
             msg += "第{}次执行签到\n".format(str(retries+1))
-            sign_in_url = "https://www.hifini.com/sg_sign.htm"
+            sign_in_url = "https://www.hifiti.com/sg_sign.htm"
             headers = {
                 'Cookie': cookie,
-                'authority': 'www.hifini.com',
+                'authority': 'www.hifiti.com',
                 'accept': 'text/plain, */*; q=0.01',
                 'accept-language': 'zh-CN,zh;q=0.9',
-                'origin': 'https://www.hifini.com',
-                'referer': 'https://www.hifini.com/',
+                'origin': 'https://www.hifiti.com',
+                'referer': 'https://www.hifiti.com/',
                 'sec-ch-ua': '"Not.A/Brand";v="8", "Chromium";v="114", "Google Chrome";v="114"',
                 'sec-ch-ua-mobile': '?0',
                 'sec-ch-ua-platform': '"macOS"',
