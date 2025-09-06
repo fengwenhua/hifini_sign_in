@@ -4,6 +4,7 @@ cron: 1 0 0 * * *
 new Env('HiFiNi');
 """
 
+import hashlib
 import json
 import os
 import re
@@ -14,6 +15,70 @@ import requests
 from sendNotify import send
 
 requests.packages.urllib3.disable_warnings()
+
+
+def login(username, password):
+    """
+    登录HiFiNi网站
+    :param username: 用户名
+    :param password: 密码（明文，函数内部会进行MD5加密）
+    :return: 登录成功返回cookie字符串，失败返回None
+    """
+    try:
+        # 对密码进行MD5加密
+        password_md5 = hashlib.md5(password.encode('utf-8')).hexdigest()
+        
+        login_url = "https://www.hifiti.com/user-login.htm"
+        headers = {
+            "content-type": "application/x-www-form-urlencoded; charset=UTF-8",
+            "x-requested-with": "XMLHttpRequest",
+            "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36",
+        }
+        
+        data = {
+            "email": username,
+            "password": password_md5
+        }
+        
+        response = requests.post(
+            url=login_url, 
+            headers=headers, 
+            data=data,
+            timeout=15, 
+            verify=False
+        )
+        
+        response_text = response.text.strip()
+        print(f"登录响应: {response_text}")
+        
+        # 检查登录是否成功
+        if "登录成功" in response_text:
+            # 提取cookie
+            cookies = response.cookies
+            bbs_token = None
+            bbs_sid = None
+            
+            # 从响应头中提取cookie
+            for cookie in cookies:
+                if cookie.name == "bbs_token":
+                    bbs_token = cookie.value
+                elif cookie.name == "bbs_sid":
+                    bbs_sid = cookie.value
+            
+            if bbs_token and bbs_sid:
+                cookie_string = f"bbs_sid={bbs_sid}; bbs_token={bbs_token}"
+                print(f"登录成功，获取到cookie: {cookie_string}")
+                return cookie_string
+            else:
+                print("登录成功但无法提取cookie")
+                return None
+        else:
+            print(f"登录失败: {response_text}")
+            return None
+            
+    except Exception as e:
+        print(f"登录过程中发生异常: {str(e)}")
+        return None
 
 
 def start(cookie):
@@ -95,5 +160,22 @@ def start(cookie):
 
 
 if __name__ == "__main__":
+    # 优先使用环境变量中的cookie
     cookie = os.getenv("HIFINI_COOKIE")
+    username = None
+    password = None
+
+    
+    # 如果没有cookie，尝试使用用户名密码登录
+    if not cookie:
+        if username and password:
+            print("未找到cookie，尝试使用用户名密码登录...")
+            cookie = login(username, password)
+            if not cookie:
+                print("登录失败，无法获取cookie")
+                exit(1)
+        else:
+            print("请设置HIFINI_COOKIE环境变量，或者设置HIFINI_USERNAME和HIFINI_PASSWORD环境变量")
+            exit(1)
+    
     start(cookie)

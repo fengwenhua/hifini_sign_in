@@ -1,6 +1,8 @@
 # hifini_sign_in
 hifini - 音乐磁场 青龙自动签到脚本
 
+适用于 https://www.hifiti.com
+
 ## 使用
 ```shell
 ql repo https://github.com/fengwenhua/hifini_sign_in.git "hifini.py" "" "sendNotify"
