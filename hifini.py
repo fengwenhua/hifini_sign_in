@@ -69,19 +69,21 @@ def login_with_session(username, password, domain):
 
         # 检查登录是否成功
         if "登录成功" in response_text:
-            print("登录成功，正在验证登录状态...")
+            print("登录成功")
+            return session
+            # print("登录成功，正在验证登录状态...")
 
-            # 登录成功后再次访问首页验证
-            verify_response = session.get(home_url, timeout=15, verify=False)
-            verify_text = verify_response.text
+            # # 登录成功后再次访问首页验证
+            # verify_response = session.get(home_url, timeout=15, verify=False)
+            # verify_text = verify_response.text
 
-            # 检查首页是否包含用户名
-            if username in verify_text:
-                print(f"登录验证成功！首页包含用户名 '{username}'")
-                return session
-            else:
-                print("登录验证失败，首页未找到用户名")
-                return None
+            # # 检查首页是否包含用户名
+            # if username in verify_text:
+            #     print(f"登录验证成功！首页包含用户名 '{username}'")
+            #     return session
+            # else:
+            #     print("登录验证失败，首页未找到用户名")
+            #     return None
         else:
             print(f"登录失败: {response_text}")
             return None
