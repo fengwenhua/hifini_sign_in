@@ -1,7 +1,7 @@
 # hifini_sign_in
 hifini - 音乐磁场 青龙自动签到脚本
 
-* 支持多用户
+* 支持多用户，配置多个`HIFINI_LOGIN`就行
 * 支持多站点
 
 测试适用于 https://www.hifiti.com ，其他类似的hifi站点应该也行，如果不行，可以提一个issuse反馈一下
@@ -30,3 +30,6 @@ ql repo https://gitproxy.fengwenhuaimg.top/https://github.com/fengwenhua/hifini_
 ```
 www.hifiti.com|zhangsan|password123456
 ```
+
+<img width="1369" height="285" alt="image" src="https://github.com/user-attachments/assets/9f4d775f-127d-4c88-adf9-c0ec8319cbe5" />
+
