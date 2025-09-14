@@ -170,21 +170,40 @@ def start(session, domain):
 
 
 if __name__ == "__main__":
-    # 从环境变量获取配置
-    domain = os.getenv("HIFINI_DOMAIN", "www.hifiti.com")
-    username = os.getenv("HIFINI_USERNAME")
-    password = os.getenv("HIFINI_PASSWORD")
+    login_list = os.getenv("HIFINI_LOGIN")
+    if not login_list:
+        print("请在脚本中设置cookies")
+        exit(1)
 
-    # 使用用户名密码登录
-    if username and password:
-        print(f"正在使用用户名密码登录到 {domain}...")
+    login_list = login_list.split("&")
+    for login in login_list:
+        domain, username, password = login.split("|")
+        if not domain or not username or not password:
+            print("登录信息不完整，无法执行签到")
+            exit(1)
+        print(f"正在为账户 {domain} {username} {password} 执行签到...")
         session = login_with_session(username, password, domain)
         if not session:
             print("登录失败，无法获取session")
             exit(1)
-    else:
-        print("请设置HIFINI_USERNAME和HIFINI_PASSWORD环境变量")
-        exit(1)
+        start(session, domain)
+        print("签到完成")
 
-    # 使用session进行签到
-    start(session, domain)
+    # # 从环境变量获取配置
+    # domain = os.getenv("HIFINI_DOMAIN", "www.hifiti.com")
+    # username = os.getenv("HIFINI_USERNAME")
+    # password = os.getenv("HIFINI_PASSWORD")
+
+    # # 使用用户名密码登录
+    # if username and password:
+    #     print(f"正在使用用户名密码登录到 {domain}...")
+    #     session = login_with_session(username, password, domain)
+    #     if not session:
+    #         print("登录失败，无法获取session")
+    #         exit(1)
+    # else:
+    #     print("请设置HIFINI_USERNAME和HIFINI_PASSWORD环境变量")
+    #     exit(1)
+
+    # # 使用session进行签到
+    # start(session, domain)
