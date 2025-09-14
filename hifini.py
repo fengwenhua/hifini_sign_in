@@ -17,96 +17,104 @@ from sendNotify import send
 requests.packages.urllib3.disable_warnings()
 
 
-def login(username, password):
+def login_with_session(username, password, domain):
     """
-    登录HiFiNi网站
+    使用session方法登录HiFiNi网站
     :param username: 用户名
     :param password: 密码（明文，函数内部会进行MD5加密）
-    :return: 登录成功返回cookie字符串，失败返回None
+    :param domain: 网站域名
+    :return: 登录成功返回session对象，失败返回None
     """
     try:
+        # 创建session对象
+        session = requests.Session()
+
+        # 设置通用headers
+        session.headers.update({
+            "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36",
+        })
+
+        # 首先访问首页
+        print("正在访问首页...")
+        home_url = f"https://{domain}/"
+        home_response = session.get(home_url, timeout=15, verify=False)
+        print(f"首页访问状态码: {home_response.status_code}")
+
         # 对密码进行MD5加密
         password_md5 = hashlib.md5(password.encode('utf-8')).hexdigest()
-        
-        login_url = "https://www.hifiti.com/user-login.htm"
-        headers = {
+
+        # 登录
+        print("正在尝试登录...")
+        login_url = f"https://{domain}/user-login.htm"
+        login_headers = {
             "content-type": "application/x-www-form-urlencoded; charset=UTF-8",
             "x-requested-with": "XMLHttpRequest",
-            "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36",
         }
-        
+
         data = {
             "email": username,
             "password": password_md5
         }
-        
-        response = requests.post(
-            url=login_url, 
-            headers=headers, 
+
+        response = session.post(
+            url=login_url,
+            headers=login_headers,
             data=data,
-            timeout=15, 
+            timeout=15,
             verify=False
         )
-        
+
         response_text = response.text.strip()
         print(f"登录响应: {response_text}")
-        
+
         # 检查登录是否成功
         if "登录成功" in response_text:
-            # 提取cookie
-            cookies = response.cookies
-            bbs_token = None
-            bbs_sid = None
-            
-            # 从响应头中提取cookie
-            for cookie in cookies:
-                if cookie.name == "bbs_token":
-                    bbs_token = cookie.value
-                elif cookie.name == "bbs_sid":
-                    bbs_sid = cookie.value
-            
-            if bbs_token and bbs_sid:
-                cookie_string = f"bbs_sid={bbs_sid}; bbs_token={bbs_token}"
-                print(f"登录成功，获取到cookie: {cookie_string}")
-                return cookie_string
+            print("登录成功，正在验证登录状态...")
+
+            # 登录成功后再次访问首页验证
+            verify_response = session.get(home_url, timeout=15, verify=False)
+            verify_text = verify_response.text
+
+            # 检查首页是否包含用户名
+            if username in verify_text:
+                print(f"登录验证成功！首页包含用户名 '{username}'")
+                return session
             else:
-                print("登录成功但无法提取cookie")
+                print("登录验证失败，首页未找到用户名")
                 return None
         else:
             print(f"登录失败: {response_text}")
             return None
-            
+
     except Exception as e:
         print(f"登录过程中发生异常: {str(e)}")
         return None
 
 
-def start(cookie):
+def start(session, domain):
     max_retries = 20
     retries = 0
     msg = ""
     while retries < max_retries:
         try:
             msg += "第{}次执行签到\n".format(str(retries + 1))
-            sign_in_url = "https://www.hifiti.com/sg_sign.htm"
+            sign_in_url = f"https://{domain}/sg_sign.htm"
             headers = {
-                "Cookie": cookie,
-                "authority": "www.hifiti.com",
+                "authority": domain,
                 "accept": "text/plain, */*; q=0.01",
                 "accept-language": "zh-CN,zh;q=0.9",
-                "origin": "https://www.hifiti.com",
-                "referer": "https://www.hifiti.com/",
+                "origin": f"https://{domain}",
+                "referer": f"https://{domain}/",
                 "sec-ch-ua": '"Not.A/Brand";v="8", "Chromium";v="114", "Google Chrome";v="114"',
                 "sec-ch-ua-mobile": "?0",
                 "sec-ch-ua-platform": '"macOS"',
                 "sec-fetch-dest": "empty",
                 "sec-fetch-mode": "cors",
                 "sec-fetch-site": "same-origin",
-                "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36",
                 "x-requested-with": "XMLHttpRequest",
             }
 
-            rsp = requests.post(
+            rsp = session.post(
                 url=sign_in_url, headers=headers, timeout=15, verify=False
             )
             rsp_text = rsp.text.strip()
@@ -160,22 +168,21 @@ def start(cookie):
 
 
 if __name__ == "__main__":
-    # 优先使用环境变量中的cookie
-    cookie = os.getenv("HIFINI_COOKIE")
-    username = None
-    password = None
+    # 从环境变量获取配置
+    domain = os.getenv("HIFINI_DOMAIN", "www.hifiti.com")
+    username = os.getenv("HIFINI_USERNAME")
+    password = os.getenv("HIFINI_PASSWORD")
 
-    
-    # 如果没有cookie，尝试使用用户名密码登录
-    if not cookie:
-        if username and password:
-            print("未找到cookie，尝试使用用户名密码登录...")
-            cookie = login(username, password)
-            if not cookie:
-                print("登录失败，无法获取cookie")
-                exit(1)
-        else:
-            print("请设置HIFINI_COOKIE环境变量，或者设置HIFINI_USERNAME和HIFINI_PASSWORD环境变量")
+    # 使用用户名密码登录
+    if username and password:
+        print(f"正在使用用户名密码登录到 {domain}...")
+        session = login_with_session(username, password, domain)
+        if not session:
+            print("登录失败，无法获取session")
             exit(1)
-    
-    start(cookie)
+    else:
+        print("请设置HIFINI_USERNAME和HIFINI_PASSWORD环境变量")
+        exit(1)
+
+    # 使用session进行签到
+    start(session, domain)
